@@ -20,7 +20,7 @@ class Game:
         # setting game clock 
         self.clock = pg.time.Clock()
         self.load_data()
-        self.start_time = 10  # Timer starting from 10 seconds
+        self.start_time = 60  # Increased timer for larger map
 
     def load_data(self):
         game_folder = path.dirname(__file__)

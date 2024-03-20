@@ -116,5 +116,3 @@ class Coin(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-
-

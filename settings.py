@@ -19,4 +19,3 @@ LIGHTGREY = (75,75,75)
 
 # Player settings
 PLAYER_SPEED = 300
-
