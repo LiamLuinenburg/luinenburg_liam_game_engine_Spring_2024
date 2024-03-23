@@ -1,5 +1,3 @@
-# This file was created by Liam Luinenburg
-
 import pygame as pg
 from settings import *
 
@@ -8,66 +6,64 @@ class Player(pg.sprite.Sprite):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE * 0.75, TILESIZE * 0.75))  # Make the sprite smaller
+        self.image = pg.Surface((TILESIZE * 0.75, TILESIZE * 0.75))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.vx, self.vy = 0, 0
-        self.x = x * TILESIZE + (TILESIZE * 0.125)  # Center the sprite in the tile
-        self.y = y * TILESIZE + (TILESIZE * 0.125)
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.rect.x = self.x
+        self.rect.y = self.y
         self.moneybag = 0
+        self.speed_boost_active = False
+        self.speed_boost_end_time = 0
 
     def get_keys(self):
         self.vx, self.vy = 0, 0
         keys = pg.key.get_pressed()
-        if keys[pg.K_LEFT] or keys[pg.K_a]:
-            self.vx = -PLAYER_SPEED  
-        if keys[pg.K_RIGHT] or keys[pg.K_d]:
-            self.vx = PLAYER_SPEED  
-        if keys[pg.K_UP] or keys[pg.K_w]:
-            self.vy = -PLAYER_SPEED  
-        if keys[pg.K_DOWN] or keys[pg.K_s]:
-            self.vy = PLAYER_SPEED
-        if self.vx != 0 and self.vy != 0:
-            self.vx *= 0.7071  # Diagonal movement adjustment
+        speed = BOOSTED_PLAYER_SPEED if self.speed_boost_active else PLAYER_SPEED
+        if keys[pg.K_LEFT] or keys[pg.K_a]: self.vx = -speed
+        if keys[pg.K_RIGHT] or keys[pg.K_d]: self.vx = speed
+        if keys[pg.K_UP] or keys[pg.K_w]: self.vy = -speed
+        if keys[pg.K_DOWN] or keys[pg.K_s]: self.vy = speed
+        if self.vx != 0 and self.vy != 0:  # Diagonal movement
+            self.vx *= 0.7071
             self.vy *= 0.7071
 
     def update(self):
         self.get_keys()
-        self.x += self.vx * self.game.dt
-        self.rect.x = self.x
+        self.rect.x += self.vx * self.game.dt
         self.collide_with_walls('x')
-        
-        self.y += self.vy * self.game.dt
-        self.rect.y = self.y
+        self.rect.y += self.vy * self.game.dt
         self.collide_with_walls('y')
-
-        # Check for coin collision after moving
-        self.collide_with_group(self.game.coins, True)
+        if self.speed_boost_active and pg.time.get_ticks() > self.speed_boost_end_time:
+            self.speed_boost_active = False
+            self.vx, self.vy = PLAYER_SPEED, PLAYER_SPEED  # Reset speed to normal
+        self.collide_with_coins()
+        self.collide_with_speed_boosts()
 
     def collide_with_walls(self, dir):
         if dir == 'x':
             hits = pg.sprite.spritecollide(self, self.game.walls, False)
             if hits:
-                if self.vx > 0:
-                    self.x = hits[0].rect.left - self.rect.width
-                elif self.vx < 0:
-                    self.x = hits[0].rect.right
-                self.vx = 0
-                self.rect.x = self.x
+                if self.vx > 0: self.rect.right = hits[0].rect.left
+                if self.vx < 0: self.rect.left = hits[0].rect.right
         if dir == 'y':
             hits = pg.sprite.spritecollide(self, self.game.walls, False)
             if hits:
-                if self.vy > 0:
-                    self.y = hits[0].rect.top - self.rect.height
-                elif self.vy < 0:
-                    self.y = hits[0].rect.bottom
-                self.vy = 0
-                self.rect.y = self.y
+                if self.vy > 0: self.rect.bottom = hits[0].rect.top
+                if self.vy < 0: self.rect.top = hits[0].rect.bottom
 
-    def collide_with_group(self, group, kill):
-        hits = pg.sprite.spritecollide(self, group, kill)
-        if hits:
-            self.moneybag += 1
+    def collide_with_coins(self):
+        hits = pg.sprite.spritecollide(self, self.game.coins, True)
+        for hit in hits:
+            self.moneybag += 1  # Or however you want to handle coin collection
+
+    def collide_with_speed_boosts(self):
+        hits = pg.sprite.spritecollide(self, self.game.speed_boosts, True)
+        for hit in hits:
+            self.speed_boost_active = True
+            self.speed_boost_end_time = pg.time.get_ticks() + 10000  # 10 seconds of boost
 
 class Wall(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -89,6 +85,19 @@ class Coin(pg.sprite.Sprite):
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+class SpeedBoost(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.speed_boosts
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.x = x * TILESIZE
         self.y = y * TILESIZE
