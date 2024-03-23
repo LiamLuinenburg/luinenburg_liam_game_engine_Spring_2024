@@ -1,6 +1,6 @@
 # This file was created by Liam Luinenburg
-WIDTH = 1024
-HEIGHT = 768
+WIDTH = 830
+HEIGHT = 865
 
 FPS = 30
 
