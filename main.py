@@ -1,3 +1,4 @@
+# This file was created by Liam Luinenburg
 import pygame as pg
 import sys
 from os import path
@@ -12,6 +13,7 @@ class Game:
         self.clock = pg.time.Clock()
         self.load_data()
         self.font = pg.font.Font(pg.font.match_font('arial'), 22)
+        self.win = False
 
     def load_data(self):
         self.map_data = []
@@ -21,7 +23,6 @@ class Game:
                 self.map_data.append(line.strip())
 
     def new(self):
-        # Reset the game setup
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.coins = pg.sprite.Group()
@@ -48,6 +49,8 @@ class Game:
             if self.start_time <= 0:
                 print("Time's up! Game over.")
                 self.playing = False
+            if self.win:
+                break
 
     def quit(self):
         pg.quit()
@@ -56,6 +59,12 @@ class Game:
     def update(self):
         self.all_sprites.update()
         self.start_time -= self.dt  # Decrement the timer by the elapsed time
+
+        if len(self.coins) == 0 and not self.win:
+            self.win = True
+            self.display_win_message()
+            pg.time.wait(2000)
+            self.quit()
 
     def draw_grid(self):
         for x in range(0, WIDTH, TILESIZE):
@@ -68,10 +77,11 @@ class Game:
         self.draw_grid()
         self.all_sprites.draw(self.screen)
         # Timer display
-        timer_text = f"Time: {int(self.start_time)}"
-        text_surface = self.font.render(timer_text, True, WHITE)
-        text_rect = text_surface.get_rect(midtop=(WIDTH / 2, 10))
-        self.screen.blit(text_surface, text_rect)
+        if not self.win:  # Don't draw the timer if the win message is being displayed
+            timer_text = f"Time: {int(self.start_time)}"
+            text_surface = self.font.render(timer_text, True, WHITE)
+            text_rect = text_surface.get_rect(midtop=(WIDTH / 2, 10))
+            self.screen.blit(text_surface, text_rect)
         pg.display.flip()
 
     def events(self):
@@ -79,7 +89,15 @@ class Game:
             if event.type == pg.QUIT:
                 self.quit()
 
+    def display_win_message(self):
+        self.screen.fill(BLACK)
+        win_text = "You Win!"
+        text_surface = self.font.render(win_text, True, WHITE)
+        text_rect = text_surface.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+        self.screen.blit(text_surface, text_rect)
+        pg.display.flip()
+
 if __name__ == '__main__':
     g = Game()
-    g.new()  # Prepare a new game
-    g.run()  # Start the main game loop
+    g.new()
+    g.run()
