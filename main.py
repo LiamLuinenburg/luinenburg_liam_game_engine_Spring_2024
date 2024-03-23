@@ -1,4 +1,10 @@
-# This file was created by Liam Luinenburg
+# This file was created by Liam Luinenburg (and AI)
+
+# Design Goals:
+# 1. Create speedboost power up
+# 2. Create coin collection system
+# 3. Create game countdown timer
+# 4. Create win/lose system
 
 # Import necessary libraries
 import pygame as pg

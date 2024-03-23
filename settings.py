@@ -1,3 +1,4 @@
+# This file was created by Liam Luinenburg (and AI)
 # Game settings
 WIDTH = 830
 HEIGHT = 865

@@ -1,4 +1,4 @@
-# This file was creater by Liam Luinenburg
+# This file was created by Liam Luinenburg (and AI)
 import pygame as pg
 from settings import *
 
