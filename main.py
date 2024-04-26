@@ -6,6 +6,8 @@
 # 3. Create game countdown timer
 # 4. Create win/lose system
 
+# Beta Goal: Make different levels
+
 # Import necessary libraries
 import pygame as pg
 import sys
@@ -20,20 +22,21 @@ class Game:
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))  # Set up the display
         pg.display.set_caption(TITLE)  # Set the window title
         self.clock = pg.time.Clock()  # Set up a clock
-        self.load_data()
+        self.level = 1  # Current level
+        self.load_data(self.level)  # Load data for the first level
         self.font = pg.font.Font(pg.font.match_font('arial'), 22)  # Font for displaying text
         self.win = False  # Check if the player has won
 
-    # Load data from files
-    def load_data(self):
+    # Load data from files, now supports multiple levels
+    def load_data(self, level):
         self.map_data = []  # Initialize an empty list for map data
         game_folder = path.dirname(__file__)
-        # Open and read the map file
-        with open(path.join(game_folder, 'map.txt'), 'rt') as f:
+        map_file = 'map.txt' if level == 1 else f'map{level}.txt'  # Dynamic map file selection based on level
+        with open(path.join(game_folder, map_file), 'rt') as f:
             for line in f:
                 self.map_data.append(line.strip())
 
-    # Set up a new game
+    # Set up a new game, now depends on the level
     def new(self):
         # Initialize sprite groups
         self.all_sprites = pg.sprite.Group()
@@ -54,7 +57,7 @@ class Game:
                 elif tile == 'S':
                     SpeedBoost(self, col, row)
 
-    # Main game loop
+    # Main game loop, now handles level transitions
     def run(self):
         self.playing = True
         while self.playing:
@@ -62,19 +65,24 @@ class Game:
             self.events()
             self.update()
             self.draw()
-            # Additional win condition check
             if self.start_time <= 0:
                 print("Time's up! Game over.")
                 self.playing = False
             if self.win:
-                break
+                if self.level < 2:  # Assuming only 2 levels for now
+                    self.level += 1
+                    self.load_data(self.level)  # Load next level
+                    self.new()
+                    self.win = False
+                else:
+                    break
 
     # Quit the game
     def quit(self):
         pg.quit()
         sys.exit()
 
-    # Update game state
+    # Update game state, now includes level handling
     def update(self):
         self.all_sprites.update()  # Update all sprites
         self.start_time -= self.dt  # Update the timer
@@ -84,7 +92,8 @@ class Game:
             self.win = True
             self.display_win_message()
             pg.time.wait(2000)  # Wait for 2 seconds before closing
-            self.quit()
+            if self.level == 2:
+                self.quit()
 
     # Draw the grid background
     def draw_grid(self):
@@ -116,7 +125,7 @@ class Game:
     # Display win message
     def display_win_message(self):
         self.screen.fill(BLACK)  # Clear the screen
-        win_text = "You Win!"
+        win_text = "Level Complete!" if self.level == 1 else "You Win!"
         text_surface = self.font.render(win_text, True, WHITE)  # Render the win text
         text_rect = text_surface.get_rect(center=(WIDTH / 2, HEIGHT / 2))  # Position the text
         self.screen.blit(text_surface, text_rect)  # Draw the text on the screen

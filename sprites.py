@@ -2,6 +2,16 @@
 import pygame as pg
 from settings import *
 
+from random import randint
+from os import path
+
+SPRITESHEET = "theBell.png"
+# needed for animated sprite
+game_folder = path.dirname(__file__)
+img_folder = path.join(game_folder, 'images')
+
+
+
 # Define the Player class
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
