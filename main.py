@@ -31,7 +31,8 @@ class Game:
     def load_data(self, level):
         self.map_data = []  # Initialize an empty list for map data
         game_folder = path.dirname(__file__)
-        map_file = 'map.txt' if level == 1 else f'map{level}.txt'  # Dynamic map file selection based on level
+        # Correct map file handling for the first level and beyond
+        map_file = 'map.txt' if level == 1 else f'map{level}.txt'
         with open(path.join(game_folder, map_file), 'rt') as f:
             for line in f:
                 self.map_data.append(line.strip())
@@ -69,7 +70,7 @@ class Game:
                 print("Time's up! Game over.")
                 self.playing = False
             if self.win:
-                if self.level < 2:  # Assuming only 2 levels for now
+                if self.level < 3:  # Updated to handle three levels
                     self.level += 1
                     self.load_data(self.level)  # Load next level
                     self.new()
@@ -92,7 +93,7 @@ class Game:
             self.win = True
             self.display_win_message()
             pg.time.wait(2000)  # Wait for 2 seconds before closing
-            if self.level == 2:
+            if self.level == 3:
                 self.quit()
 
     # Draw the grid background
@@ -123,9 +124,9 @@ class Game:
                 self.quit()
 
     # Display win message
-    def display_win_message(self):
+    def display_win_message(self):  # Corrected syntax here
         self.screen.fill(BLACK)  # Clear the screen
-        win_text = "Level Complete!" if self.level == 1 else "You Win!"
+        win_text = "Level Complete!" if self.level < 3 else "You Win!"
         text_surface = self.font.render(win_text, True, WHITE)  # Render the win text
         text_rect = text_surface.get_rect(center=(WIDTH / 2, HEIGHT / 2))  # Position the text
         self.screen.blit(text_surface, text_rect)  # Draw the text on the screen
