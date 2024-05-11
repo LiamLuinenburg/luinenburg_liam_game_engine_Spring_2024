@@ -5,6 +5,8 @@
 # 2. Create coin collection system
 # 3. Create game countdown timer
 # 4. Create win/lose system
+# 5. Implement a portal system where portals teleport the player
+# 6. Add fading effects for teleportation
 
 # Beta Goal: Make different levels
 
@@ -13,7 +15,7 @@ import pygame as pg
 import sys
 from os import path
 from settings import *  # Import game settings
-from sprites import Player, Wall, Coin, SpeedBoost  # Import sprite classes
+from sprites import Player, Wall, Coin, SpeedBoost, Portal  # Import sprite classes
 
 class Game:
     # Initialize the game
@@ -31,7 +33,6 @@ class Game:
     def load_data(self, level):
         self.map_data = []  # Initialize an empty list for map data
         game_folder = path.dirname(__file__)
-        # Correct map file handling for the first level and beyond
         map_file = 'map.txt' if level == 1 else f'map{level}.txt'
         with open(path.join(game_folder, map_file), 'rt') as f:
             for line in f:
@@ -44,6 +45,7 @@ class Game:
         self.walls = pg.sprite.Group()
         self.coins = pg.sprite.Group()
         self.speed_boosts = pg.sprite.Group()
+        self.portals = pg.sprite.Group()
         self.start_time = 60  # Reset the timer for the new game
         
         # Create sprites based on the map data
@@ -57,12 +59,16 @@ class Game:
                     Coin(self, col, row)
                 elif tile == 'S':
                     SpeedBoost(self, col, row)
+                elif tile == 'U':
+                    Portal(self, col, row, (128, 0, 128))  # Purple portal
+                elif tile == 'V':
+                    Portal(self, col, row, (135, 206, 235))  # Sky blue portal
 
     # Main game loop, now handles level transitions
     def run(self):
         self.playing = True
         while self.playing:
-            self.dt = self.clock.tick(FPS) / 1000  # Control game speed
+            self.dt = self.clock.tick(FPS) / 1000
             self.events()
             self.update()
             self.draw()
@@ -70,9 +76,9 @@ class Game:
                 print("Time's up! Game over.")
                 self.playing = False
             if self.win:
-                if self.level < 3:  # Updated to handle three levels
+                if self.level < 3:
                     self.level += 1
-                    self.load_data(self.level)  # Load next level
+                    self.load_data(self.level)
                     self.new()
                     self.win = False
                 else:
@@ -85,14 +91,13 @@ class Game:
 
     # Update game state, now includes level handling
     def update(self):
-        self.all_sprites.update()  # Update all sprites
-        self.start_time -= self.dt  # Update the timer
+        self.all_sprites.update()
+        self.start_time -= self.dt
         
-        # Check if all coins are collected
         if len(self.coins) == 0 and not self.win:
             self.win = True
             self.display_win_message()
-            pg.time.wait(2000)  # Wait for 2 seconds before closing
+            pg.time.wait(2000)
             if self.level == 3:
                 self.quit()
 
@@ -124,7 +129,7 @@ class Game:
                 self.quit()
 
     # Display win message
-    def display_win_message(self):  # Corrected syntax here
+    def display_win_message(self):
         self.screen.fill(BLACK)  # Clear the screen
         win_text = "Level Complete!" if self.level < 3 else "You Win!"
         text_surface = self.font.render(win_text, True, WHITE)  # Render the win text
