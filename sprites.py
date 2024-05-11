@@ -1,9 +1,8 @@
 # This file was created by Liam Luinenburg (and AI)
 import pygame as pg
 from settings import *
-from random import randint
-from os import path
 
+# Define the Player class
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
@@ -13,7 +12,7 @@ class Player(pg.sprite.Sprite):
         self.image.fill(GREEN)
         self.original_image = self.image.copy()  # Keep an original copy for fading
         self.rect = self.image.get_rect()
-        self.vx, self.vy = 0, 0  # Initialize velocities
+        self.vx, self.vy = 0, 0
         self.x = x * TILESIZE
         self.y = y * TILESIZE
         self.rect.x = self.x
@@ -21,8 +20,10 @@ class Player(pg.sprite.Sprite):
         self.fading = None  # 'in', 'out', or None
         self.fade_counter = 255  # Start fully opaque
         self.destination_portal = None
+        self.last_portal_use_time = 0  # Track the last time a portal was used
         self.speed_boost_active = False  # Initialize speed boost active status
         self.speed_boost_end_time = 0  # Initialize speed boost end time
+        self.moneybag = 0  # Initialize coin collection count
 
     def get_keys(self):
         if self.fading is None:  # Only move if not currently fading
@@ -38,12 +39,14 @@ class Player(pg.sprite.Sprite):
                 self.vy *= 0.7071
 
     def update(self):
-        self.get_keys()
-        self.rect.x += self.vx * self.game.dt
-        self.rect.y += self.vy * self.game.dt
-        self.collide_with_walls('x')
-        self.collide_with_walls('y')
         if self.fading is None:
+            self.get_keys()
+            self.rect.x += self.vx * self.game.dt
+            self.collide_with_walls('x')
+            self.rect.y += self.vy * self.game.dt
+            self.collide_with_walls('y')
+            self.collide_with_coins()
+        if self.fading is None or self.fading == 'in':
             self.collide_with_portals()
         self.handle_fading()
 
@@ -78,11 +81,19 @@ class Player(pg.sprite.Sprite):
                 if self.vy > 0: self.rect.bottom = hits[0].rect.top
                 if self.vy < 0: self.rect.top = hits[0].rect.bottom
 
+    def collide_with_coins(self):
+        hits = pg.sprite.spritecollide(self, self.game.coins, True)  # True to kill the coin sprite
+        for hit in hits:
+            self.moneybag += 1  # Update player's coin count or similar attribute
+
     def collide_with_portals(self):
-        hits = pg.sprite.spritecollide(self, self.game.portals, False)
-        if hits:
-            self.fading = 'out'
-            self.destination_portal = self.find_destination_portal(hits[0])
+        current_time = pg.time.get_ticks()
+        if current_time - self.last_portal_use_time > 3000 and self.fading is None:  # 3000 ms = 3 seconds cooldown
+            hits = pg.sprite.spritecollide(self, self.game.portals, False)
+            if hits:
+                self.fading = 'out'
+                self.destination_portal = self.find_destination_portal(hits[0])
+                self.last_portal_use_time = current_time  # Update last use time
 
     def find_destination_portal(self, entry_portal):
         for portal in self.game.portals:

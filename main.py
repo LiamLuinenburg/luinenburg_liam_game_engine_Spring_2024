@@ -5,8 +5,7 @@
 # 2. Create coin collection system
 # 3. Create game countdown timer
 # 4. Create win/lose system
-# 5. Implement a portal system where portals teleport the player
-# 6. Add fading effects for teleportation
+# 5. Implement a portal system where portals teleport the player with a cooldown and visual fading effects
 
 # Beta Goal: Make different levels
 
@@ -112,8 +111,8 @@ class Game:
     def draw(self):
         self.screen.fill(BLACK)  # Fill screen with black
         self.draw_grid()  # Draw the grid
-        self.all_sprites.draw(self.screen)  # Draw all sprites
-        
+        self.portals.draw(self.screen)  # Ensure portals are drawn first
+        self.all_sprites.draw(self.screen)  # Draw all sprites, including the player
         # Draw the timer unless win message is being displayed
         if not self.win:
             timer_text = f"Time: {int(self.start_time)}"
@@ -125,7 +124,7 @@ class Game:
     # Handle input and window events
     def events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT:
+            if event.type is pg.QUIT:
                 self.quit()
 
     # Display win message
