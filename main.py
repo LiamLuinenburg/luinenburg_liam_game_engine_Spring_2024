@@ -9,6 +9,8 @@
 
 # Beta Goal: Make different levels
 
+# Final Goal: Make a teleportation system
+
 # Import necessary libraries
 import pygame as pg
 import sys
