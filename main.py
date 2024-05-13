@@ -1,4 +1,5 @@
-# This file was created by Liam Luinenburg (and AI)
+# This file was created by Liam Luinenburg
+# This file was modified using ChatGPT
 
 # Design Goals:
 # 1. Create speedboost power up
@@ -8,10 +9,11 @@
 # 5. Implement a portal system where portals teleport the player with a cooldown and visual fading effects
 
 # Beta Goal: Make different levels
-
 # Final Goal: Make a teleportation system
 
-# Import necessary libraries
+# Sources:
+# ChatGPT
+
 import pygame as pg
 import sys
 from os import path

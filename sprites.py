@@ -1,3 +1,5 @@
+# This file was created by Liam Luinenburg
+# This file was modified using ChatGPT
 import pygame as pg
 from settings import *
 
@@ -17,12 +19,13 @@ class Player(pg.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
         self.fading = None  # 'in', 'out', or None
-        self.fade_counter = 255  # Start fully opaque
+        self.fade_counter = 255 
         self.destination_portal = None
         self.last_portal_use_time = 0  # Track the last time a portal was used
         self.speed_boost_active = False  # Initialize speed boost active status
         self.speed_boost_end_time = 0  # Initialize speed boost end time
         self.moneybag = 0  # Initialize coin collection count
+        self.speed_boost_duration = 5000  # Duration of the speed boost in milliseconds
 
     def get_keys(self):
         if self.fading is None:  # Only move if not currently fading
@@ -34,7 +37,7 @@ class Player(pg.sprite.Sprite):
             if keys[pg.K_UP] or keys[pg.K_w]: self.vy = -speed
             if keys[pg.K_DOWN] or keys[pg.K_s]: self.vy = speed
             if self.vx != 0 and self.vy != 0:
-                self.vx *= 0.7071  # Normalize diagonal speed
+                self.vx *= 0.7071
                 self.vy *= 0.7071
 
     def update(self):
@@ -49,40 +52,8 @@ class Player(pg.sprite.Sprite):
         if self.fading is None or self.fading == 'in':
             self.collide_with_portals()
         self.handle_fading()
-        # Deactivate speed boost if time is up
-        if self.speed_boost_active and pg.time.get_ticks() > self.speed_boost_end_time:
-            self.deactivate_speed_boost()
-
-    def collide_with_walls(self, dir):
-        hits = pg.sprite.spritecollide(self, self.game.walls, False)
-        if hits:
-            if self.vx > 0: self.rect.right = hits[0].rect.left
-            if self.vx < 0: self.rect.left = hits[0].rect.right
-        if dir == 'y':
-            hits = pg.sprite.spritecollide(self, self.game.walls, False)
-            if hits:
-                if self.vy > 0: self.rect.bottom = hits[0].rect.top
-                if self.vy < 0: self.rect.top = hits[0].rect.bottom
-
-    def collide_with_coins(self):
-        hits = pg.sprite.spritecollide(self, self.game.coins, True)  # True to kill the coin sprite
-        for hit in hits:
-            self.moneybag += 1  # Increase the coin count
-
-    def collide_with_speed_boosts(self):
-        hits = pg.sprite.spritecollide(self, self.game.speed_boosts, True)  # True to kill the speed boost sprite
-        for hit in hits:
-            self.activate_speed_boost()
-
-    def activate_speed_boost(self):
-        self.speed_boost_active = True
-        self.speed_boost_end_time = pg.time.get_ticks() + 5000  # Speed boost lasts for 5000 ms (5 seconds)
-
-    def deactivate_speed_boost(self):
-        self.speed_boost_active = False
 
     def handle_fading(self):
-        # Handle fade out and in effects
         if self.fading == 'out' and self.fade_counter > 0:
             self.fade_counter -= 15
             self.image.set_alpha(self.fade_counter)
@@ -101,14 +72,39 @@ class Player(pg.sprite.Sprite):
             self.fading = 'in'
             self.destination_portal = None
 
+    def collide_with_walls(self, dir):
+        if dir == 'x':
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                if self.vx > 0: self.rect.right = hits[0].rect.left
+                if self.vx < 0: self.rect.left = hits[0].rect.right
+        if dir == 'y':
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                if self.vy > 0: self.rect.bottom = hits[0].rect.top
+                if self.vy < 0: self.rect.top = hits[0].rect.bottom
+
+    def collide_with_coins(self):
+        hits = pg.sprite.spritecollide(self, self.game.coins, True)  # True to kill the coin sprite
+        for hit in hits:
+            self.moneybag += 1  # Update player's coin count or similar attribute
+
+    def collide_with_speed_boosts(self):
+        hits = pg.sprite.spritecollide(self, self.game.speed_boosts, True)  # True to remove the speed boost sprite
+        if hits:
+            self.speed_boost_active = True
+            self.speed_boost_end_time = pg.time.get_ticks() + self.speed_boost_duration
+            for hit in hits:
+                hit.kill()  # This ensures the speed boost is removed from the game
+
     def collide_with_portals(self):
         current_time = pg.time.get_ticks()
-        if current_time - self.last_portal_use_time > 3000 and self.fading is None:  # 3 seconds cooldown
+        if current_time - self.last_portal_use_time > 3000 and self.fading is None:  # 3000 ms = 3 seconds cooldown
             hits = pg.sprite.spritecollide(self, self.game.portals, False)
             if hits:
                 self.fading = 'out'
                 self.destination_portal = self.find_destination_portal(hits[0])
-                self.last_portal_use_time = current_time
+                self.last_portal_use_time = current_time  # Update last use time
 
     def find_destination_portal(self, entry_portal):
         for portal in self.game.portals:
